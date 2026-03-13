@@ -76,4 +76,12 @@ do_queries() {
     add_query_result_to_project "$PROJECT_ID" "reviewed-by:${PROJECT_OWNER} is:pr updated:>=$since"
 }
 
-do_queries
+cmd="$1"
+shift
+
+case "$cmd" in
+    (all) do_queries;;
+    (query) query_node_ids "$@";;
+    (add) add_query_result_to_project "$PROJECT_ID" "$@";;
+    (*) die "Unknown command $cmd";;
+esac

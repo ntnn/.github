@@ -44,7 +44,43 @@ add_node_to_project() {
         ' -f projectId="$PROJECT_ID" -f contentId="$node_id" --silent
 }
 
+query_archived_project_item_content_ids() {
+    local project_id="$1"
+    [[ -z "$project_id" ]] && die "No project_id passed"
+
+    gh api graphql --paginate -f query='
+        query($projectId: ID!, $cursor: String) {
+            node(id: $projectId) {
+                ... on ProjectV2 {
+                    items(first: 100, after: $cursor, query: "is:archived") {
+                        pageInfo {
+                            hasNextPage
+                            endCursor
+                        }
+                        nodes {
+                            content {
+                                ... on Issue { id }
+                                ... on PullRequest { id }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ' -f projectId="$project_id" --jq '.data.node.items.nodes[].content.id'
+}
+
 declare -A handled_nodes=()
+
+populate_archived_nodes() {
+    local project_id="$1"
+    [[ -z "$project_id" ]] && die "No project_id passed"
+
+    for node_id in $(query_archived_project_item_content_ids "$project_id"); do
+        log "Skipping archived node '$node_id'"
+        handled_nodes["$node_id"]="archived"
+    done
+}
 
 add_query_result_to_project() {
     local project_id="$1"
@@ -52,7 +88,7 @@ add_query_result_to_project() {
     local query="$2"
     [[ -z "$query" ]] && die "no query passed"
 
-    query_node_ids "$query" | while read node_id; do
+    for node_id in $(query_node_ids "$query"); do
         if [[ -n "${handled_nodes["$node_id"]}" ]]; then
             # skip already handled nodes
             continue
@@ -65,7 +101,8 @@ add_query_result_to_project() {
 }
 
 do_queries() {
-    local since="$(date -u -d '24 hours ago' '+%Y-%m-%dT%H:%M:%S')"
+    populate_archived_nodes "$PROJECT_ID"
+    local since="$(date -u -d '2 hours ago' '+%Y-%m-%dT%H:%M:%S')"
 
     add_query_result_to_project "$PROJECT_ID" "org:${PROJECT_OWNER} is:issue updated:>=$since"
     add_query_result_to_project "$PROJECT_ID" "org:${PROJECT_OWNER} is:pr updated:>=$since"
@@ -81,6 +118,7 @@ shift
 
 case "$cmd" in
     (all) do_queries;;
+    (archived) query_archived_project_item_content_ids "$@";;
     (query) query_node_ids "$@";;
     (add) add_query_result_to_project "$PROJECT_ID" "$@";;
     (*) die "Unknown command $cmd";;

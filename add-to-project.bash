@@ -41,7 +41,7 @@ add_node_to_project() {
               }
             }
           }
-        ' -f projectId="$PROJECT_ID" -f contentId="$node_id" --silent
+        ' -f projectId="$PROJECT_ID" -f contentId="$node_id" --jq '.data.addProjectV2ItemById.item.id'
 }
 
 query_archived_project_item_content_ids() {
@@ -94,6 +94,30 @@ query_status_fields() {
         --jq '.data.node.fields.nodes[] | select(.name != null) | "\(.name) (\(.id)):", (.options[] | "  \(.name) (\(.id))")'
 }
 
+set_item_status() {
+    local project_id="$1"
+    [[ -z "$project_id" ]] && die "No project_id passed"
+    local item_id="$2"
+    [[ -z "$item_id" ]] && die "No item_id passed"
+    local field_id="$3"
+    [[ -z "$field_id" ]] && die "No field_id passed"
+    local option_id="$4"
+    [[ -z "$option_id" ]] && die "No option_id passed"
+
+    gh api graphql -f query='
+        mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+            updateProjectV2ItemFieldValue(input: {
+                projectId: $projectId,
+                itemId: $itemId,
+                fieldId: $fieldId,
+                value: { singleSelectOptionId: $optionId }
+            }) {
+                projectV2Item { id }
+            }
+        }
+    ' -f projectId="$project_id" -f itemId="$item_id" -f fieldId="$field_id" -f optionId="$option_id" --silent
+}
+
 declare -A handled_nodes=()
 
 populate_archived_nodes() {
@@ -111,6 +135,8 @@ add_query_result_to_project() {
     [[ -z "$project_id" ]] && die "No project_id passed"
     local query="$2"
     [[ -z "$query" ]] && die "no query passed"
+    local field_id="$3"
+    local option_id="$4"
 
     for node_id in $(query_node_ids "$query"); do
         if [[ -n "${handled_nodes["$node_id"]}" ]]; then
@@ -118,8 +144,13 @@ add_query_result_to_project() {
             continue
         fi
         log "Handling node '$node_id'"
-        if add_node_to_project "$project_id" "$node_id"; then
+        local item_id
+        if item_id=$(add_node_to_project "$project_id" "$node_id"); then
             handled_nodes["$node_id"]=done
+            if [[ -n "$field_id" ]] && [[ -n "$option_id" ]]; then
+                log "Setting status on item '$item_id'"
+                set_item_status "$project_id" "$item_id" "$field_id" "$option_id"
+            fi
         fi
     done
 }

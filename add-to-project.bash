@@ -70,6 +70,30 @@ query_archived_project_item_content_ids() {
     ' -f projectId="$project_id" --jq '.data.node.items.nodes[].content.id'
 }
 
+query_status_fields() {
+    local project_id="$1"
+    [[ -z "$project_id" ]] && die "No project_id passed"
+
+    gh api graphql -f query='
+        query($projectId: ID!) {
+            node(id: $projectId) {
+                ... on ProjectV2 {
+                    fields(first: 50) {
+                        nodes {
+                            ... on ProjectV2SingleSelectField {
+                                id
+                                name
+                                options { id name }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ' -f projectId="$project_id" \
+        --jq '.data.node.fields.nodes[] | select(.name != null) | "\(.name) (\(.id)):", (.options[] | "  \(.name) (\(.id))")'
+}
+
 declare -A handled_nodes=()
 
 populate_archived_nodes() {
@@ -118,6 +142,7 @@ shift
 
 case "$cmd" in
     (all) do_queries;;
+    (fields) query_status_fields "$PROJECT_ID";;
     (archived) query_archived_project_item_content_ids "$@";;
     (query) query_node_ids "$@";;
     (add) add_query_result_to_project "$PROJECT_ID" "$@";;

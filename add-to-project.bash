@@ -156,8 +156,10 @@ add_query_result_to_project() {
 }
 
 do_queries() {
-    populate_archived_nodes "$PROJECT_ID"
-    local since="$(date -u -d '48 hours ago' '+%Y-%m-%dT%H:%M:%S')"
+    # costs too many api requests
+    # populate_archived_nodes "$PROJECT_ID"
+
+    local since="$(date -u -d '2 hours ago' '+%Y-%m-%dT%H:%M:%S')"
 
     add_query_result_to_project "$PROJECT_ID" "org:${PROJECT_OWNER} is:issue updated:>=$since"
     add_query_result_to_project "$PROJECT_ID" "org:${PROJECT_OWNER} is:pr updated:>=$since" "$STATUS_FIELD" "$STATUS_OPT_REVIEWING"

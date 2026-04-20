@@ -161,18 +161,18 @@ do_queries() {
 
     local since="$(date -u -d '2 hours ago' '+%Y-%m-%dT%H:%M:%S')"
 
-    add_query_result_to_project "$PROJECT_ID" "org:${PROJECT_OWNER} is:issue updated:>=$since"
-    add_query_result_to_project "$PROJECT_ID" "org:${PROJECT_OWNER} is:pr updated:>=$since" "$STATUS_FIELD" "$STATUS_OPT_REVIEWING"
+    add_query_result_to_project "$PROJECT_ID" "org:${PROJECT_OWNER} is:issue updated:>=$since state:open"
+    add_query_result_to_project "$PROJECT_ID" "org:${PROJECT_OWNER} is:pr updated:>=$since state:open" "$STATUS_FIELD" "$STATUS_OPT_REVIEWING"
 
-    add_query_result_to_project "$PROJECT_ID" "author:${PROJECT_OWNER} is:issue updated:>=$since"
-    add_query_result_to_project "$PROJECT_ID" "author:${PROJECT_OWNER} is:pr updated:>=$since" "$STATUS_FIELD" "$STATUS_OPT_IN_REVIEW"
+    add_query_result_to_project "$PROJECT_ID" "author:${PROJECT_OWNER} is:issue updated:>=$since state:open"
+    add_query_result_to_project "$PROJECT_ID" "author:${PROJECT_OWNER} is:pr updated:>=$since state:open" "$STATUS_FIELD" "$STATUS_OPT_IN_REVIEW"
 
-    add_query_result_to_project "$PROJECT_ID" "commenter:${PROJECT_OWNER} is:issue updated:>=$since" "$STATUS_FIELD" "$STATUS_OPT_KEEPING_TAGS"
-    add_query_result_to_project "$PROJECT_ID" "commenter:${PROJECT_OWNER} is:pr updated:>=$since" "$STATUS_FIELD" "$STATUS_OPT_REVIEWING"
+    add_query_result_to_project "$PROJECT_ID" "commenter:${PROJECT_OWNER} is:issue updated:>=$since state:open" "$STATUS_FIELD" "$STATUS_OPT_KEEPING_TAGS"
+    add_query_result_to_project "$PROJECT_ID" "commenter:${PROJECT_OWNER} is:pr updated:>=$since state:open" "$STATUS_FIELD" "$STATUS_OPT_REVIEWING"
 
-    add_query_result_to_project "$PROJECT_ID" "author:${PROJECT_OWNER} is:issue updated:>=$since" "$STATUS_FIELD" "$STATUS_OPT_KEEPING_TAGS"
+    add_query_result_to_project "$PROJECT_ID" "author:${PROJECT_OWNER} is:issue updated:>=$since state:open" "$STATUS_FIELD" "$STATUS_OPT_KEEPING_TAGS"
 
-    add_query_result_to_project "$PROJECT_ID" "reviewed-by:${PROJECT_OWNER} is:pr updated:>=$since" "$STATUS_FIELD" "$STATUS_OPT_REVIEWING"
+    add_query_result_to_project "$PROJECT_ID" "reviewed-by:${PROJECT_OWNER} is:pr updated:>=$since state:open" "$STATUS_FIELD" "$STATUS_OPT_REVIEWING"
 }
 
 cmd="$1"

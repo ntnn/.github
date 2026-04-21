@@ -164,6 +164,8 @@ do_queries() {
     add_query_result_to_project "$PROJECT_ID" "org:${PROJECT_OWNER} is:issue updated:>=$since state:open"
     add_query_result_to_project "$PROJECT_ID" "org:${PROJECT_OWNER} is:pr updated:>=$since state:open" "$STATUS_FIELD" "$STATUS_OPT_REVIEWING"
 
+    add_query_result_to_project "$PROJECT_ID" "assignee:${PROJECT_OWNER} is:issue updated:>=$since state:open"
+
     add_query_result_to_project "$PROJECT_ID" "author:${PROJECT_OWNER} is:issue updated:>=$since state:open"
     add_query_result_to_project "$PROJECT_ID" "author:${PROJECT_OWNER} is:pr updated:>=$since state:open" "$STATUS_FIELD" "$STATUS_OPT_IN_REVIEW"
 
